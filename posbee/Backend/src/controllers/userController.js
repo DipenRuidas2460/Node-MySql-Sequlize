@@ -1,6 +1,7 @@
 const db = require("../db/db");
 const User = db.user;
 const Product = db.product;
+const Education = db.education;
 const { Sequelize, Op, QueryTypes } = require("sequelize");
 
 const addUser = async (req, res) => {
@@ -340,11 +341,11 @@ const oneToMany = async (req, res) => {
 
 const manyToMany = async (req, res) => {
   try {
-    // const data = await Product.create({
-    //   title: "nirma",
-    //   description: "surfexale",
-    //   userId: "1",
-    // });
+    const data = await Product.create({
+      title: "nirma",
+      description: "surfexale",
+      userId: "1",
+    });
 
     // const data = await User.findAll({
     //   attributes: ["firstName", "lastName"],
@@ -356,13 +357,13 @@ const manyToMany = async (req, res) => {
     //   // where: { id: "2" },
     // });
 
-    const data = await Product.findAll({
-      attributes: ["title", "description"],
-      include: {
-        model: User,
-        attributes: ["firstName", "lastName"],
-      },
-    });
+    // const data = await Product.findAll({
+    //   attributes: ["title", "description"],
+    //   include: {
+    //     model: User,
+    //     attributes: ["firstName", "lastName"],
+    //   },
+    // });
 
     // const data = await User.findAll({
     //   attributes: ["firstName", "lastName"],
@@ -375,6 +376,254 @@ const manyToMany = async (req, res) => {
     return res.status(200).json({
       msg: "Record created Successfully!",
       data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const paranoidUser = async (req, res) => {
+  try {
+    // const data = await Product.create({
+    //   title: "india",
+    //   description: "cricket",
+    //   userId: "1",
+    // });
+
+    // const data = await Product.destroy({
+    //   where: {
+    //     id: 2,
+    //   },
+    //   // force: true,
+    // });
+
+    // const data = await Product.restore({
+    //   where:{
+    //     id:2
+    //   }
+    // })
+
+    // const data = await Product.findAll({ paranoid: false });
+
+    const data = await Product.findByPk(2, { paranoid: false });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const egarLoading = async (req, res) => {
+  try {
+    const data = await Product.findOne({
+      where: {
+        id: 2,
+      },
+      include: User,
+    });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const lazyLoading = async (req, res) => {
+  try {
+    // const data = await User.create({
+    //  firstName:"suresh", lastName:"Ruidas"
+    // });
+
+    // if (data && data.id) {
+    //   await Product.create({title:"book", description:"suspence", userId:data.id})
+    // }
+
+    const data = await User.findOne({
+      where: {
+        id: 2,
+      },
+      // include:Product
+    });
+
+    const productData = await data.getProducts();
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+      productData: productData,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const advanceEgarLoading = async (req, res) => {
+  try {
+    const data = await User.findAll({
+      // include: [{
+      //   model: Product, // except required left join apply
+      //   // required:true   // for inner join
+
+      //   required: false, // right outer join
+      //   right: true,     // right outer join
+      // },{
+      //   model:Education
+      // }],
+      include: { all: true }, // left outer join by default
+    });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const nestedEgarLoading = async (req, res) => {
+  try {
+    const data = await User.findAll({
+      // include: [{
+      //   model: Product, // except required left join apply
+      //   // required:true   // for inner join
+      //   required: false, // right outer join
+      //   right: true,     // right outer join
+      // },{
+      //   model:Education
+      // }],
+      // include: {
+      //   model: Product,
+      //   include: {
+      //     model: Education,
+      //     where: {
+      //       id: 1,
+      //     },
+      //   },
+      //   where: {
+      //     id: 2,
+      //   },
+      // },
+      // where: {
+      //   id: 3,
+      // },
+      // include:{all:true, nested:true}
+    });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const createAssociation = async (req, res) => {
+  try {
+    // await Product.bulkCreate(
+    //   [
+    //     {
+    //       title: "film",
+    //       description: "horror",
+    //       users: {
+    //         firstName: "ram",
+    //         lastName: "Ghosh",
+    //       },
+    //     },
+    //     {
+    //       title: "play",
+    //       description: "football",
+    //       users: {
+    //         firstName: "rahul",
+    //         lastName: "Ghosh",
+    //       },
+    //     },
+    //   ],
+    //   {
+    //     include: [db.productuser],
+    //   }
+    // );
+
+    await Product.create(
+      {
+        title: "lence",
+        description: "glass",
+        users: {
+          firstName: "ajoy",
+          lastName: "das",
+        },
+      },
+
+      {
+        include: [db.productuser],
+      }
+    );
+
+    const data = await User.findAll({
+      include: {
+        model: Product,
+      },
+    });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const mnAssociation = async (req, res) => {
+  try {
+    // const amidala = await db.customer.create({ username: "p4dm3", points: 1000 });
+    // const queen = await db.profile.create({ name: "Queen" });
+    // await amidala.addProfile(queen, { through: { selfGranted: false } });
+    // const result = await db.customer.findOne({
+    //   where: { username: "p4dm3" },
+    //   include: db.profile,
+    // });
+
+    const amidala = await db.customer.create(
+      {
+        username: "p4dm3",
+        points: 1000,
+        profiles: [
+          {
+            name: "Queen",
+            User_Profile: {
+              selfGranted: false,
+            },
+          },
+        ],
+      },
+      {
+        include: db.profile,
+      }
+    );
+
+    const result = await db.customer.findOne({
+      where: { username: "p4dm3" },
+      include: db.profile,
+    });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: result,
     });
   } catch (err) {
     console.log(err.message);
@@ -398,4 +647,11 @@ module.exports = {
   oneToOne,
   oneToMany,
   manyToMany,
+  paranoidUser,
+  egarLoading,
+  lazyLoading,
+  advanceEgarLoading,
+  nestedEgarLoading,
+  createAssociation,
+  mnAssociation,
 };

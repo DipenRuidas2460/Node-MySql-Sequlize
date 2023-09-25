@@ -41,6 +41,7 @@ module.exports = (sequelize, DataTypes) => {
       // timestamps:false
       // createdAt:false,
       // updatedAt:true
+      
     }
   );
   return User;

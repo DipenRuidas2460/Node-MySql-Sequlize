@@ -17,7 +17,14 @@ const {
   rawQueryUser,
   oneToOne,
   oneToMany,
-  manyToMany
+  manyToMany,
+  paranoidUser,
+  egarLoading,
+  lazyLoading,
+  advanceEgarLoading,
+  nestedEgarLoading,
+  createAssociation,
+  mnAssociation
 } = require("../controllers/userController");
 
 router.post("/create", postUser);
@@ -43,6 +50,20 @@ router.get("/one-to-one", oneToOne);
 router.get("/one-to-many", oneToMany);
 
 router.get("/many-to-many", manyToMany);
+
+router.get("/paranoid", paranoidUser);
+
+router.get("/egar-loading", egarLoading);
+
+router.get("/lazy-loading", lazyLoading);
+
+router.get("/advance-egar-loading", advanceEgarLoading);
+
+router.get("/nested-egar-loading", nestedEgarLoading);
+
+router.get("/creating-with-associations", createAssociation);
+
+router.get("/m-n-associations", mnAssociation);
 
 router.patch("/users/:id", patchUser);
 
