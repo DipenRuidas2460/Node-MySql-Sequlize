@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes, Model) => {
       description: {
         type: DataTypes.STRING,
       },
+      // userId: DataTypes.INTEGER,
     },
     {
       sequelize,
@@ -17,5 +18,5 @@ module.exports = (sequelize, DataTypes, Model) => {
     }
   );
 
-  return Product
+  return Product;
 };

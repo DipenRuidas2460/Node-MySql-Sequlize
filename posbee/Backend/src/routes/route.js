@@ -12,7 +12,12 @@ const {
   putUser,
   queryUser,
   findUser,
-  getSetVirtualUser
+  getSetVirtualUser,
+  validateUser,
+  rawQueryUser,
+  oneToOne,
+  oneToMany,
+  manyToMany
 } = require("../controllers/userController");
 
 router.post("/create", postUser);
@@ -28,6 +33,16 @@ router.get("/query", queryUser);
 router.get("/finders", findUser);
 
 router.get("/get-set-virtual", getSetVirtualUser);
+
+router.get("/validateuser", validateUser);
+
+router.get("/raw-query", rawQueryUser);
+
+router.get("/one-to-one", oneToOne);
+
+router.get("/one-to-many", oneToMany);
+
+router.get("/many-to-many", manyToMany);
 
 router.patch("/users/:id", patchUser);
 
