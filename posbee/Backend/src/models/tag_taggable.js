@@ -4,7 +4,6 @@ module.exports = (sequelize, DataTypes, Model) => {
     {
       tagId: {
         type: DataTypes.INTEGER,
-        unique: "tt_unique_constraint",
       },
       taggableId: {
         type: DataTypes.INTEGER,

@@ -32,7 +32,9 @@ const {
   mangeTransaction,
   hooks,
   polyOneToMany,
-  polyManyToMany
+  polyManyToMany,
+  queryInterface,
+  subQuery
 } = require("../controllers/userController");
 
 router.post("/create", postUser);
@@ -88,6 +90,10 @@ router.get("/hooks", hooks);
 router.get("/polymorphic-one-to-many", polyOneToMany);
 
 router.get("/polymorphic-many-to-many", polyManyToMany);
+
+router.get("/query-interface", queryInterface);
+
+router.get("/sub-query", subQuery);
 
 router.patch("/users/:id", patchUser);
 

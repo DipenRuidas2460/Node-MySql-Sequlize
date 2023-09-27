@@ -4,6 +4,12 @@ require("dotenv").config();
 const sequelize = new Sequelize("service", "root", process.env.ROOT_PASSWORD, {
   host: "localhost",
   logging: false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
   dialect: "mysql",
 });
 
@@ -23,10 +29,11 @@ db.product = require("../models/productModel")(sequelize, DataTypes, Model);
 db.education = require("../models/education")(sequelize, DataTypes, Model);
 db.customer = require("../models/customer")(sequelize, DataTypes);
 db.profile = require("../models/profile")(sequelize, DataTypes);
-db.image = require("../models/imageModel")(sequelize, DataTypes, Model)
-db.video = require("../models/videoModel")(sequelize, DataTypes, Model)
-db.comment = require("../models/commentModel")(sequelize, DataTypes, Model)
-db.tag = require("../models/tagModel")(sequelize, DataTypes, Model)
+db.image = require("../models/imageModel")(sequelize, DataTypes, Model);
+db.video = require("../models/videoModel")(sequelize, DataTypes, Model);
+db.comment = require("../models/commentModel")(sequelize, DataTypes, Model);
+db.tag = require("../models/tagModel")(sequelize, DataTypes, Model);
+db.tagTaggable = require("../models/tag_taggable")(sequelize, DataTypes, Model);
 
 db.userproduct = require("../models/userProduct")(
   sequelize,
@@ -152,7 +159,11 @@ db.image.hasMany(db.comment, {
     commentableType: "image",
   },
 });
-db.comment.belongsTo(db.image, { foreignKey: "commentableId", constraints: false });
+
+db.comment.belongsTo(db.image, {
+  foreignKey: "commentableId",
+  constraints: false,
+});
 
 db.video.hasMany(db.comment, {
   foreignKey: "commentableId",
@@ -161,7 +172,64 @@ db.video.hasMany(db.comment, {
     commentableType: "video",
   },
 });
-db.comment.belongsTo(db.video, { foreignKey: "commentableId", constraints: false });
+
+db.comment.belongsTo(db.video, {
+  foreignKey: "commentableId",
+  constraints: false,
+});
+
+db.image.belongsToMany(db.tag, {
+  through: {
+    model: db.tagTaggable,
+    unique: false,
+    scope: {
+      taggableType: "image",
+    },
+  },
+  foreignKey: "taggableId",
+  constraints: false,
+});
+
+db.tag.belongsToMany(db.image, {
+  through: {
+    model: db.tagTaggable,
+    unique: false,
+  },
+  foreignKey: "tagId",
+  constraints: false,
+});
+
+db.video.belongsToMany(db.tag, {
+  through: {
+    model: db.tagTaggable,
+    unique: false,
+    scope: {
+      taggableType: "video",
+    },
+  },
+  foreignKey: "taggableId",
+  constraints: false,
+});
+
+db.tag.belongsToMany(db.video, {
+  through: {
+    model: db.tagTaggable,
+    unique: false,
+  },
+  foreignKey: "tagId",
+  constraints: false,
+});
+
+db.post = sequelize.define('post', {
+  content: DataTypes.STRING
+}, { timestamps: false });
+
+db.reaction = sequelize.define('reaction', {
+  type: DataTypes.STRING
+}, { timestamps: false });
+
+db.post.hasMany(db.reaction);
+db.reaction.belongsTo(db.post);
 
 db.sequelize.sync({ force: false });
 

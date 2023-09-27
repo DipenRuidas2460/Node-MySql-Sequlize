@@ -4,9 +4,10 @@ const Product = db.product;
 const Image = db.image;
 const Video = db.video;
 const Comment = db.comment;
-const Tag = db.tag
+const Tag = db.tag;
+const TagTaggable = db.tagTaggable;
 const Education = db.education;
-const { Sequelize, Op, QueryTypes, where } = require("sequelize");
+const { Sequelize, Op, QueryTypes, where, DataTypes } = require("sequelize");
 
 const addUser = async (req, res) => {
   try {
@@ -956,9 +957,140 @@ const polyOneToMany = async (req, res) => {
 
 const polyManyToMany = async (req, res) => {
   try {
+    // const imageData = await Image.create({
+    //   title: "second image",
+    //   url: "second_url",
+    // });
+
+    // const videoData = await Video.create({
+    //   title: "second video",
+    //   text: "awsome video",
+    // });
+
+    // const tagData = await Tag.create({
+    //   name: "reactjs",
+    // });
+
+    // if (tagData && imageData && tagData.id && imageData.id) {
+    //   await TagTaggable.create({
+    //     tagId: tagData.id,
+    //     taggableId: imageData.id,
+    //     taggableType: "image",
+    //   });
+    // }
+
+    // if (tagData && tagData.id && videoData && videoData.id) {
+    //   await TagTaggable.create({
+    //     tagId: tagData.id,
+    //     taggableId: videoData.id,
+    //     taggableType: "video",
+    //   });
+    // }
+
+    // const data = await Image.findAll({
+    //   include:[Tag]
+    // })
+
+    // const data = await Video.findAll({
+    //   include:[Tag]
+    // })
+
+    const data = await Tag.findAll({
+      include: [Image, Video],
+    });
 
     return res.status(200).json({
-      // imageData: imageData,
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const queryInterface = async (req, res) => {
+  try {
+    const queryInterface = db.sequelize.getQueryInterface();
+
+    // queryInterface.createTable("Person", {
+    //   name: DataTypes.STRING,
+    //   isBetaMember: {
+    //     type: DataTypes.BOOLEAN,
+    //     defaultValue: false,
+    //     allowNull: false,
+    //   },
+    // });
+
+    queryInterface.addColumn("Person", "petName", { type: DataTypes.INTEGER });
+
+    // queryInterface.changeColumn("Person", "foo", {
+    //   type: DataTypes.FLOAT,
+    //   defaultValue: 3.14,
+    //   allowNull: false,
+    // });
+
+    // queryInterface.removeColumn('Person', 'petName', { /* query options */ });
+
+    const data = {};
+
+    return res.status(200).json({
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+async function makePostWithReactions(content, reactionTypes) {
+  const post = await db.post.create({ content });
+  await db.reaction.bulkCreate(
+    reactionTypes.map((type) => ({ type, postId: post.id }))
+  );
+  return post;
+}
+
+const subQuery = async (req, res) => {
+  try {
+    // const data = await makePostWithReactions("Hello World", [
+    //   "Like",
+    //   "Angry",
+    //   "Laugh",
+    //   "Like",
+    //   "Like",
+    //   "Angry",
+    //   "Sad",
+    //   "Like",
+    // ]);
+    // const data1 = await makePostWithReactions("My Second Post", [
+    //   "Laugh",
+    //   "Laugh",
+    //   "Like",
+    //   "Laugh",
+    // ]);
+
+    const data = await db.post.findAll({
+      attributes: {
+        include: [
+          [
+            db.sequelize.literal(`(
+                      SELECT COUNT(*)
+                      FROM reactions AS reaction
+                      WHERE
+                          reaction.postId = post.id
+                          AND
+                          reaction.type = "Laugh"
+                  )`),
+            "laughReactionsCount",
+          ],
+        ],
+      },
+      order: [[db.sequelize.literal("laughReactionsCount"), "DESC"]],
+    });
+
+    return res.status(200).json({
+      data: data,
+      // data1: data1,
     });
   } catch (err) {
     console.log(err.message);
@@ -997,4 +1129,6 @@ module.exports = {
   hooks,
   polyOneToMany,
   polyManyToMany,
+  queryInterface,
+  subQuery,
 };
