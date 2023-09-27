@@ -24,10 +24,20 @@ const {
   advanceEgarLoading,
   nestedEgarLoading,
   createAssociation,
-  mnAssociation
+  mnAssociation,
+  superManyToMany,
+  associationScope,
+  postProduct,
+  unMangeTransaction,
+  mangeTransaction,
+  hooks,
+  polyOneToMany,
+  polyManyToMany
 } = require("../controllers/userController");
 
 router.post("/create", postUser);
+
+router.post("/createProduct", postProduct);
 
 router.get("/addUser", addUser);
 
@@ -64,6 +74,20 @@ router.get("/nested-egar-loading", nestedEgarLoading);
 router.get("/creating-with-associations", createAssociation);
 
 router.get("/m-n-associations", mnAssociation);
+
+router.get("/super-many-to-many", superManyToMany);
+
+router.get("/association-scope", associationScope);
+
+router.get("/un-manage-transaction", unMangeTransaction); // Un-Manage-Transaction
+
+router.get("/manage-transaction", mangeTransaction); // Manage-Transaction
+
+router.get("/hooks", hooks);
+
+router.get("/polymorphic-one-to-many", polyOneToMany);
+
+router.get("/polymorphic-many-to-many", polyManyToMany);
 
 router.patch("/users/:id", patchUser);
 

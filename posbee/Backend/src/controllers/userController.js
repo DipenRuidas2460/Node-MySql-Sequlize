@@ -1,8 +1,12 @@
 const db = require("../db/db");
 const User = db.user;
 const Product = db.product;
+const Image = db.image;
+const Video = db.video;
+const Comment = db.comment;
+const Tag = db.tag
 const Education = db.education;
-const { Sequelize, Op, QueryTypes } = require("sequelize");
+const { Sequelize, Op, QueryTypes, where } = require("sequelize");
 
 const addUser = async (req, res) => {
   try {
@@ -55,6 +59,22 @@ const postUser = async (req, res) => {
       data = await User.bulkCreate(postData);
     } else {
       data = await User.create(postData);
+    }
+    return res.status(200).json({ data: data });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const postProduct = async (req, res) => {
+  try {
+    const postData = req.body;
+    let data;
+    if (Array.isArray(postData) && postData.length > 0) {
+      data = await Product.bulkCreate(postData);
+    } else {
+      data = await Product.create(postData);
     }
     return res.status(200).json({ data: data });
   } catch (err) {
@@ -264,14 +284,18 @@ const rawQueryUser = async (req, res) => {
 
 const oneToOne = async (req, res) => {
   try {
-    // const data = await User.create({ firstName: "shankar", lastName: "ruidas" });
-    // if (data && data.id) {
-    //   await Product.create({
-    //     title: "electric",
-    //     description: "fan",
-    //     userId: data.id,
-    //   });
-    // }
+    const data = await User.create({
+      firstName: "shankar",
+      lastName: "ruidas",
+      status: 1,
+    });
+    if (data && data.id) {
+      await Product.create({
+        title: "electric",
+        description: "fan",
+        userId: data.id,
+      });
+    }
 
     // const data = await User.findAll({
     //   attributes: ["firstName", "lastName"],
@@ -283,14 +307,14 @@ const oneToOne = async (req, res) => {
     //   where: { id: "2" },
     // });
 
-    const data = await Product.findAll({
-      attributes: ["title", "description"],
-      include: {
-        model: User,
-        as: "userDetails",
-        attributes: ["firstName", "lastName"],
-      },
-    });
+    // const data = await Product.findAll({
+    //   attributes: ["title", "description"],
+    //   include: {
+    //     model: User,
+    //     as: "userDetails",
+    //     attributes: ["firstName", "lastName"],
+    //   },
+    // });
 
     return res.status(200).json({
       msg: "Record created Successfully!",
@@ -631,6 +655,317 @@ const mnAssociation = async (req, res) => {
   }
 };
 
+const superManyToMany = async (req, res) => {
+  try {
+    await db.player.bulkCreate([
+      { username: "s0me0ne" },
+      { username: "empty" },
+      { username: "greenhead" },
+      { username: "not_spock" },
+      { username: "bowl_of_petunias" },
+    ]);
+
+    await db.game.bulkCreate([
+      { name: "The Big Clash" },
+      { name: "Winter Showdown" },
+      { name: "Summer Beatdown" },
+    ]);
+
+    await db.team.bulkCreate([
+      { name: "The Martians" },
+      { name: "The Earthlings" },
+      { name: "The Plutonians" },
+    ]);
+
+    await db.gameTeam.bulkCreate([
+      { GameId: 1, TeamId: 1 },
+      { GameId: 1, TeamId: 2 },
+      { GameId: 2, TeamId: 1 },
+      { GameId: 2, TeamId: 3 },
+      { GameId: 3, TeamId: 2 },
+      { GameId: 3, TeamId: 3 },
+    ]);
+
+    await db.playerGameTeam.bulkCreate([
+      { PlayerId: 1, GameTeamId: 3 },
+      { PlayerId: 3, GameTeamId: 3 },
+      { PlayerId: 4, GameTeamId: 4 },
+      { PlayerId: 5, GameTeamId: 4 },
+    ]);
+
+    const data = await db.game.findOne({
+      where: {
+        name: "Winter Showdown",
+      },
+      include: {
+        model: db.gameTeam,
+        include: [
+          {
+            model: db.player,
+            through: { attributes: [] },
+          },
+          db.team,
+        ],
+      },
+    });
+
+    return res.status(200).json({
+      msg: "Record created Successfully!",
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const associationScope = async (req, res) => {
+  try {
+    User.addScope("checkStatus", { where: { status: 1 } });
+
+    User.addScope("lastNameCheck", { where: { lastName: "Joshi, Indian" } });
+
+    // const data = await User.scope(["checkStatus", "lastNameCheck"]).findAll({});
+
+    User.addScope("includeProduct", {
+      include: {
+        model: Product,
+        attributes: ["title"],
+      },
+    });
+
+    User.addScope("userAttributes", {
+      attributes: ["firstName"],
+    });
+
+    User.addScope("limitApply", {
+      limit: 2,
+    });
+
+    const data = await User.scope([
+      "includeProduct",
+      "userAttributes",
+      "limitApply",
+    ]).findAll({});
+
+    return res.status(200).json({
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const unMangeTransaction = async (req, res) => {
+  try {
+    const t = await db.sequelize.transaction();
+    const data = await User.create({
+      firstName: "sonu",
+      lastName: "mahato",
+      status: 0,
+    });
+    if (data && data.id) {
+      try {
+        await db.product.create({
+          title: "pubg",
+          description: "playing",
+          // userId: data.id,
+          userId: null,
+        });
+        await t.commit();
+        console.log("commited");
+      } catch (err) {
+        await t.rollback();
+        console.log("rollback");
+        await User.destroy({
+          where: {
+            id: data.id,
+          },
+        });
+      }
+    }
+
+    return res.status(200).json({
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const mangeTransaction = async (req, res) => {
+  try {
+    // const data = await User.create({
+    //   firstName: "raman",
+    //   lastName: "mahato",
+    //   status: 1,
+    // });
+
+    // if (data && data.id) {
+    try {
+      const result = await db.sequelize.transaction(async (t) => {
+        // const product = await Product.bulkCreate(
+        //   [
+        //     {
+        //       title: "bottle",
+        //       description: "thrusting",
+        //       userId: data.id,
+        //     },
+        //     {
+        //       title: "ludo",
+        //       description: "playing",
+        //       userId: null,
+        //     },
+        //   ],
+        //   {
+        //     transaction: t,
+        //   }
+        // );
+
+        const product = await Product.create(
+          {
+            title: null,
+            description: "factory",
+            users: {
+              firstName: "robin",
+              lastName: "das",
+            },
+          },
+
+          {
+            include: [db.productuser],
+          }
+        );
+        return product;
+      });
+    } catch (err) {
+      console.log("error:-", err.message);
+      // await User.destroy({
+      //   where: {
+      //     id: data.id,
+      //   },
+      // });
+    }
+    // }
+
+    return res.status(200).json({
+      data: {},
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const hooks = async (req, res) => {
+  try {
+    // const data = await Product.create({
+    //   title: "raman",
+    //   description: "mahato",
+    //   userId: 1,
+    // });
+
+    const data = await Product.create({
+      title: "mohan",
+      description: "kumar",
+      userId: 1,
+    });
+
+    return res.status(200).json({
+      data: data,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const polyOneToMany = async (req, res) => {
+  try {
+    // const imageData = await Image.create({
+    //   title: "first image",
+    //   url: "first_url",
+    // });
+
+    // let imageData = {}
+
+    // const videoData = await Video.create({
+    //   title: "third video",
+    //   text: "awsome video",
+    // });
+
+    // if (imageData && imageData.id) {
+    //   await Comment.create({
+    //     title: "first comment for image",
+    //     commentableId: imageData.id,
+    //     commentableType: "image",
+    //   });
+    // }
+
+    // if (videoData && videoData.id) {
+    //   await Comment.create({
+    //     title: "third comment for video",
+    //     commentableId: videoData.id,
+    //     commentableType: "video",
+    //   });
+    // }
+
+    // const imageCommentData = await Image.findAll({
+    //   include:[{
+    //     model:Comment
+    //   }]
+    // })
+
+    const videoCommentData = await Video.findAll({
+      include: [
+        {
+          model: Comment,
+        },
+      ],
+    });
+
+    // const videoCommentData = await Comment.findAll({
+    //   include: [
+    //     {
+    //       model: Video,
+    //     },
+    //   ],
+    // });
+
+    // const imageCommentData = await Comment.findAll({
+    //   include: [
+    //     {
+    //       model: Image,
+    //     },
+    //   ],
+    // });
+
+    return res.status(200).json({
+      // imageData: imageData,
+      // videoData: videoData,
+      // imageCommentData:imageCommentData,
+      videoCommentData: videoCommentData,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
+const polyManyToMany = async (req, res) => {
+  try {
+
+    return res.status(200).json({
+      // imageData: imageData,
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).send({ status: false, msg: err });
+  }
+};
+
 module.exports = {
   addUser,
   getUsers,
@@ -654,4 +989,12 @@ module.exports = {
   nestedEgarLoading,
   createAssociation,
   mnAssociation,
+  superManyToMany,
+  associationScope,
+  postProduct,
+  unMangeTransaction,
+  mangeTransaction,
+  hooks,
+  polyOneToMany,
+  polyManyToMany,
 };

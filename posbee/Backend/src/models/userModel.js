@@ -35,13 +35,14 @@ module.exports = (sequelize, DataTypes) => {
           throw new Error("Do not try to set the `fullName` value!");
         },
       },
+      status: DataTypes.INTEGER,
     },
     {
       // tableName:"users",
       // timestamps:false
       // createdAt:false,
       // updatedAt:true
-      
+      underscored:true,
     }
   );
   return User;
