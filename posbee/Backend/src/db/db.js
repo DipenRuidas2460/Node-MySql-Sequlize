@@ -4,6 +4,7 @@ require("dotenv").config();
 const sequelize = new Sequelize("service", "root", process.env.ROOT_PASSWORD, {
   host: "localhost",
   logging: false,
+  port: 3306,
   pool: {
     max: 5,
     min: 0,
@@ -21,7 +22,6 @@ try {
 }
 
 const db = {};
-db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.user = require("../models/userModel")(sequelize, DataTypes);
@@ -34,38 +34,33 @@ db.video = require("../models/videoModel")(sequelize, DataTypes, Model);
 db.comment = require("../models/commentModel")(sequelize, DataTypes, Model);
 db.tag = require("../models/tagModel")(sequelize, DataTypes, Model);
 db.tagTaggable = require("../models/tag_taggable")(sequelize, DataTypes, Model);
+db.customer_profile = require("../models/customer_profile")(
+  sequelize,
+  DataTypes,
+  Model
+);
 
-db.userproduct = require("../models/userProduct")(
+db.userProduct = require("../models/userProduct")(
   sequelize,
   DataTypes,
   db.user,
   db.product
 );
 
-// db.user.hasOne(db.product, {foreignKey:'userId', as: "productDetails" });
+// const Customer_Profile = sequelize.define(
+//   "Customer_Profile",
+//   {
+//     id: {
+//       type: DataTypes.INTEGER,
+//       primaryKey: true,
+//       autoIncrement: true,
+//       allowNull: false,
+//     },
+//     selfGranted: DataTypes.BOOLEAN,
+//   },
+//   { timestamps: false }
+// );
 
-db.user.hasMany(db.product);
-db.newProductUser = db.product.belongsTo(db.user);
-
-// db.user.belongsToMany(db.product, { through: 'UserProduct' });
-// db.product.belongsToMany(db.user, { through: 'UserProduct' });
-
-const User_Profile = sequelize.define(
-  "User_Profile",
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-      allowNull: false,
-    },
-    selfGranted: DataTypes.BOOLEAN,
-  },
-  { timestamps: false }
-);
-
-db.customer.belongsToMany(db.profile, { through: User_Profile });
-db.profile.belongsToMany(db.customer, { through: User_Profile });
 
 // Two One-to-many is equal to one many-to-many
 
@@ -83,13 +78,6 @@ db.profile.belongsToMany(db.customer, { through: User_Profile });
 //   { timestamps: false }
 // );
 
-// db.grant = Grant
-
-// db.customer.hasMany(db.grant);
-// db.grant.belongsTo(db.customer);
-// db.profile.hasMany(db.grant);
-// db.grant.belongsTo(db.profile);
-
 db.player = sequelize.define("Player", { username: DataTypes.STRING });
 db.team = sequelize.define("Team", { name: DataTypes.STRING });
 db.game = sequelize.define("Game", { name: DataTypes.STRING });
@@ -105,6 +93,52 @@ db.gameTeam = sequelize.define("GameTeam", {
   },
 });
 
+// Super Many-to-Many relationship between Player and GameTeam
+
+db.playerGameTeam = sequelize.define("PlayerGameTeam", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false,
+  },
+});
+
+db.post = sequelize.define(
+  "post",
+  {
+    content: DataTypes.STRING,
+  },
+  { timestamps: false }
+);
+
+db.reaction = sequelize.define(
+  "reaction",
+  {
+    type: DataTypes.STRING,
+  },
+  { timestamps: false }
+);
+
+// db.user.hasOne(db.product, {foreignKey:'userId', as: "productDetails" });
+
+db.user.hasMany(db.product);
+db.newProductUser = db.product.belongsTo(db.user);
+
+// db.user.belongsToMany(db.product, { through: 'db.userProduct' });
+// db.product.belongsToMany(db.user, { through: 'db.userProduct' });
+
+db.customer.belongsToMany(db.profile, { through: db.customer_profile });
+db.profile.belongsToMany(db.customer, { through: db.customer_profile });
+
+// db.grant = Grant
+
+// db.customer.hasMany(db.grant);
+// db.grant.belongsTo(db.customer);
+
+// db.profile.hasMany(db.grant);
+// db.grant.belongsTo(db.profile);
+
 //  many-to-many relationship
 
 db.team.belongsToMany(db.game, { through: db.gameTeam });
@@ -117,17 +151,6 @@ db.gameTeam.belongsTo(db.game);
 
 db.team.hasMany(db.gameTeam);
 db.gameTeam.belongsTo(db.team);
-
-// Super Many-to-Many relationship between Player and GameTeam
-
-db.playerGameTeam = sequelize.define("PlayerGameTeam", {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
-  },
-});
 
 db.player.belongsToMany(db.gameTeam, { through: db.playerGameTeam });
 db.gameTeam.belongsToMany(db.player, { through: db.playerGameTeam });
@@ -219,14 +242,6 @@ db.tag.belongsToMany(db.video, {
   foreignKey: "tagId",
   constraints: false,
 });
-
-db.post = sequelize.define('post', {
-  content: DataTypes.STRING
-}, { timestamps: false });
-
-db.reaction = sequelize.define('reaction', {
-  type: DataTypes.STRING
-}, { timestamps: false });
 
 db.post.hasMany(db.reaction);
 db.reaction.belongsTo(db.post);
