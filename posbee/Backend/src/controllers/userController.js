@@ -1042,13 +1042,13 @@ const queryInterface = async (req, res) => {
   }
 };
 
-async function makePostWithReactions(content, reactionTypes) {
+const makePostWithReactions = async (content, reactionTypes) => {
   const post = await db.post.create({ content });
   await db.reaction.bulkCreate(
     reactionTypes.map((type) => ({ type, postId: post.id }))
   );
   return post;
-}
+};
 
 const subQuery = async (req, res) => {
   try {
