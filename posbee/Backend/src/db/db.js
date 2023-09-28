@@ -39,7 +39,6 @@ db.customer_profile = require("../models/customer_profile")(
   DataTypes,
   Model
 );
-
 db.userProduct = require("../models/userProduct")(
   sequelize,
   DataTypes,
@@ -83,7 +82,6 @@ db.team = sequelize.define("Team", { name: DataTypes.STRING });
 db.game = sequelize.define("Game", { name: DataTypes.STRING });
 
 // Super Many-to-Many relationship between Game and Team (gameTeam model)
-
 db.gameTeam = sequelize.define("GameTeam", {
   id: {
     type: DataTypes.INTEGER,
@@ -94,7 +92,6 @@ db.gameTeam = sequelize.define("GameTeam", {
 });
 
 // Super Many-to-Many relationship between Player and GameTeam
-
 db.playerGameTeam = sequelize.define("PlayerGameTeam", {
   id: {
     type: DataTypes.INTEGER,
@@ -140,12 +137,10 @@ db.profile.belongsToMany(db.customer, { through: db.customer_profile });
 // db.grant.belongsTo(db.profile);
 
 //  many-to-many relationship
-
 db.team.belongsToMany(db.game, { through: db.gameTeam });
 db.game.belongsToMany(db.team, { through: db.gameTeam });
 
-// using one-to-many create many-to-many relationship
-
+// using two-one-to-many relationship can create many-to-many relationship
 db.game.hasMany(db.gameTeam);
 db.gameTeam.belongsTo(db.game);
 
@@ -174,7 +169,6 @@ db.education.belongsTo(db.product, { foreignKey: "productId" });
 // db.product.belongsToMany(db.user, { through: db.userproduct });
 
 // Polymorphic Associations:--
-
 db.image.hasMany(db.comment, {
   foreignKey: "commentableId",
   constraints: false,
